@@ -59,7 +59,8 @@ export default function Home() {
     formData.append("message", message);
 
     try {
-      const response = await fetch("http://localhost:3001/send-messages", {
+      // const response = await fetch("http://localhost:3001/send-messages", {
+      const response = await fetch("https://oftalmocentro.onrender.com/send-messages", {
         method: "POST",
         body: formData,
       });
