@@ -3,6 +3,14 @@
 @tailwind utilities;
 
 
+.orange-btn{
+  @apply bg-orange-500 py-2 px-5 rounded-lg text-white
+}
+
+.orange-btn:hover {
+  @apply bg-orange-400
+}
+
 @layer utilities {
   .text-balance {
     text-wrap: balance;

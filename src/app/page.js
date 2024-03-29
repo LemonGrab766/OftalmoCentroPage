@@ -60,7 +60,7 @@ export default function Home() {
 
     try {
       // const response = await fetch("http://localhost:3001/send-messages", {
-      const response = await fetch("https://oftalmocentro.onrender.com/send-messages", {
+        const response = await fetch("https://oftalmocentro.onrender.com/send-messages", {
         method: "POST",
         body: formData,
       });
@@ -71,12 +71,46 @@ export default function Home() {
     }
   };
 
+  const insertText = (text) => {
+    setMessage((prev) => prev + text);
+  };
+
   return (
     <div className=" bg-orange-500 flex flex-wrap items-center justify-around min-h-screen p-10 gap-y-10">
       <div className=" flex flex-col justify-around bg-white h-[400px] rounded-2xl p-10">
         <label className=" text-center text-[30px] mb-4 font-bold">
           Mensaje
         </label>
+        <div className=" flex flex-wrap gap-4 m-3">
+          <button
+            name="{paciente}"
+            onClick={(ev) => insertText(ev.target.name)}
+            className="orange-btn"
+          >
+            {"{paciente}"}
+          </button>
+          <button
+            name="{profesional}"
+            onClick={(ev) => insertText(ev.target.name)}
+            className="orange-btn"
+          >
+            {"{profesional}"}
+          </button>
+          <button
+            name="{fecha + 1}"
+            onClick={(ev) => insertText(ev.target.name)}
+            className="orange-btn"
+          >
+            {"{fecha + N}"}
+          </button>
+          <button
+            name="{hora}"
+            onClick={(ev) => insertText(ev.target.name)}
+            className="orange-btn"
+          >
+            {"{hora}"}
+          </button>
+        </div>
         <textarea
           onChange={(ev) => setMessage(ev.target.value)}
           value={message}
@@ -86,10 +120,7 @@ export default function Home() {
           className=" h-52 w-[500px] border-2 border-orange-500 rounded-lg p-1 mb-4"
         />
         <div className=" text-center">
-          <button
-            onClick={updateMessage}
-            className=" bg-orange-500 py-2 px-5 rounded-lg text-white hover:bg-orange-400"
-          >
+          <button onClick={updateMessage} className="orange-btn">
             Guardar Mensaje
           </button>
         </div>
@@ -133,10 +164,7 @@ export default function Home() {
           />
         </label>
         <p className=" flex-1 mb-2">{selectFile}</p>
-        <button
-          type="submit"
-          className=" bg-orange-500 py-2 px-5 rounded-lg text-white hover:bg-orange-400"
-        >
+        <button type="submit" className="orange-btn">
           Subir y procesar
         </button>
       </form>
