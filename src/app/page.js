@@ -5,10 +5,12 @@ import { useEffect, useState } from "react";
 export default function Home() {
   const [message, setMessage] = useState("");
   const [selectFile, setSelectFile] = useState("");
+  const [cursorPosition, setCursorPosition] = useState("noSelect");
 
   const [messageSuccesful, setMessageSuccesful] = useState("");
   const [error, setError] = useState("");
 
+  // console.log(cursorPosition);
   // console.log(message);
   // console.log(messageSuccesful);
   // console.log(error);
@@ -59,11 +61,13 @@ export default function Home() {
     formData.append("message", message);
 
     try {
-      // const response = await fetch("http://localhost:3001/send-messages", {
-        const response = await fetch("https://oftalmocentro.onrender.com/send-messages", {
-        method: "POST",
-        body: formData,
-      });
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_URL}/send-messages`,
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
       const data = await response.json();
       setMessageSuccesful(data.message);
     } catch (error) {
@@ -72,7 +76,19 @@ export default function Home() {
   };
 
   const insertText = (text) => {
-    setMessage((prev) => prev + text);
+    if (cursorPosition === "noSelect") {
+      setMessage((prev) => prev + text);
+      return;
+    }
+    const beforeCursor = message.substring(0, cursorPosition);
+    const afterCursor = message.substring(cursorPosition);
+
+    const newText = beforeCursor + text + afterCursor;
+
+    setMessage(newText);
+
+    const newCursorPosition = cursorPosition + text.length;
+    setTimeout(() => setCursorPosition(newCursorPosition), 0);
   };
 
   return (
@@ -112,7 +128,15 @@ export default function Home() {
           </button>
         </div>
         <textarea
-          onChange={(ev) => setMessage(ev.target.value)}
+          onChange={(ev) => {
+            setMessage(ev.target.value);
+          }}
+          onKeyUp={(ev) => {
+            setCursorPosition(ev.target.selectionStart);
+          }}
+          onClick={(ev) => {
+            setCursorPosition(ev.target.selectionStart);
+          }}
           value={message}
           type="text"
           name="message"
