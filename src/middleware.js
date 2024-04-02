@@ -7,12 +7,14 @@ export async function middleware(req) {
     if (!token) {
       return NextResponse.redirect(new URL("/login", req.url));
     }
-    const res = await fetch(url + "/check", {
+    // const res = await fetch(url + "/check", {
+    const res = await fetch(url +"/api/user/check", {
       method: "GET",
       headers: {
         token: token.value,
       },
     });
+
 
     if (res.status !== 200) {
       return NextResponse.redirect(new URL("/login", req.url));

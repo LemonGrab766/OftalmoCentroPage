@@ -23,17 +23,21 @@ export default function Page() {
     const password = ev.target.elements.password.value;
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_URL}/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email,
-          password,
-        }),
-        credentials: "include",
-      });
+      // const response = await fetch(`${process.env.NEXT_PUBLIC_URL}/login`, {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_URL}/api/user/login`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            email,
+            password,
+          }),
+          credentials: "include",
+        }
+      );
       if (response.status === 200) {
         route.push("/");
       } else {

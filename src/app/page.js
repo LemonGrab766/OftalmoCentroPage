@@ -62,7 +62,7 @@ export default function Home() {
 
     try {
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_URL}/send-messages`,
+        `${process.env.NEXT_PUBLIC_URL_SERVER}/send-messages`,
         {
           method: "POST",
           body: formData,
