@@ -1,7 +1,7 @@
 "use client";
 import axios from "axios";
 import Image from "next/image";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import * as XLSX from "xlsx";
 
 export default function Home() {
@@ -11,22 +11,32 @@ export default function Home() {
 
   const [messageSuccesful, setMessageSuccesful] = useState("");
   const [error, setError] = useState("");
-  const [processMessage, setProcessMessage] = useState(true);
+  const [processMessage, setProcessMessage] = useState(false);
+
+  const processMessageRef = useRef(processMessage);
+
+useEffect(() => {
+  processMessageRef.current = processMessage;
+}, [processMessage]);
 
   // console.log(cursorPosition);
   // console.log(message);
   // console.log(messageSuccesful);
   // console.log(error);
 
-  console.log(processMessage);
-
+  // console.log(processMessage, "process");
+  
   useEffect(() => {
     const getProcess = async () => {
       try {
         const { data } = await axios.get(
           `${process.env.NEXT_PUBLIC_URL_SERVER}/process-messages`
         );
-        if (data !== processMessage) {
+        // console.log(typeof data, data, "Tipo y valor de data");
+        // console.log(typeof processMessageRef.current, processMessageRef.current, "Tipo y valor de processMessage");
+        // console.log(data !== processMessageRef.current, "data2");
+        
+        if (data !== processMessageRef.current) {
           setProcessMessage(data);
           if (!data) {
             setMessageSuccesful("El Envio de mensajes a terminado");
@@ -36,7 +46,7 @@ export default function Home() {
         console.log(error);
       }
     };
-    getProcess();
+    // getProcess();
     const intervalId = setInterval(getProcess, 20000);
 
     return () => clearInterval(intervalId);
@@ -157,6 +167,7 @@ export default function Home() {
       // await fetch(`${process.env.NEXT_PUBLIC_URL_SERVER}/cancel-messages`, {
       //   method: "GET",
       // });
+      setProcessMessage(false);
       setMessageSuccesful("Mensajes cancelados");
     } catch (error) {
       setError("Ocurrio un error");
@@ -185,7 +196,7 @@ export default function Home() {
         <label className=" text-center text-[30px] mb-4 font-bold">
           Mensaje
         </label>
-        <div className=" flex flex-wrap gap-4 m-3">
+        <div className=" flex flex-wrap justify-center max-w-[500px] gap-4 m-3 ">
           <button
             name="{paciente}"
             onClick={(ev) => insertText(ev.target.name)}
@@ -213,6 +224,13 @@ export default function Home() {
             className="orange-btn"
           >
             {"{hora}"}
+          </button>
+          <button
+            name="{dia}"
+            onClick={(ev) => insertText(ev.target.name)}
+            className="orange-btn"
+          >
+            {"{dia}"}
           </button>
         </div>
         <textarea
