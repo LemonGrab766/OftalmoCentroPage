@@ -167,7 +167,7 @@ useEffect(() => {
       // await fetch(`${process.env.NEXT_PUBLIC_URL_SERVER}/cancel-messages`, {
       //   method: "GET",
       // });
-      setProcessMessage(false);
+      // setProcessMessage(false);
       setMessageSuccesful("Mensajes cancelados");
     } catch (error) {
       setError("Ocurrio un error");
