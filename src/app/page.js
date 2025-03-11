@@ -11,7 +11,7 @@ export default function Home() {
 
   const [messageSuccesful, setMessageSuccesful] = useState("");
   const [error, setError] = useState("");
-  const [processMessage, setProcessMessage] = useState(false);
+  const [processMessage, setProcessMessage] = useState(true);
   const [values, setValues] = useState([]);
   const [uniqueValues, setUniqueValues] = useState([]);
 
