@@ -1,1 +1,3 @@
-{"message":"Hola, {paciente}:\nTe recordamos que el martes tenés un turno con la Dra. {profesional}.\n\n📆{fecha} a las {hora}.\n\n🏥Presencial en Felipe Erdman 485 Villa Dolores\n\n👉🏻¿No podes asistir?\ncancélalo con mas de 24 horas de anticipación.\n\n⚠️ Este mensaje es automático, no es necesario responder. Si ya has cancelado tu turno o lo has reagendado, simplemente ignora este mensaje."}
+{
+  "message": "Hola, {paciente}:\nTe recordamos que el {dia} tenés un turno {estudios} con {profesional}.\n\n📆{fecha} a las {hora}.\n{pami}\n🏥Presencial en Felipe Erdman 485 Villa Dolores\n\n👉🏻¿No podes asistir?\ncancélalo con mas de 24 horas de anticipación.\n\n⚠️ Este mensaje es automático, no es necesario responder. Si ya has cancelado tu turno o lo has reagendado, simplemente ignora este mensaje."
+}
