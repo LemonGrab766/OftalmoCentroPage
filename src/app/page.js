@@ -12,30 +12,22 @@ export default function Home() {
   const [messageSuccesful, setMessageSuccesful] = useState("");
   const [error, setError] = useState("");
   const [processMessage, setProcessMessage] = useState(false);
+  const [values, setValues] = useState([]);
+  const [uniqueValues, setUniqueValues] = useState([]);
 
   const processMessageRef = useRef(processMessage);
 
-useEffect(() => {
-  processMessageRef.current = processMessage;
-}, [processMessage]);
+  useEffect(() => {
+    processMessageRef.current = processMessage;
+  }, [processMessage]);
 
-  // console.log(cursorPosition);
-  // console.log(message);
-  // console.log(messageSuccesful);
-  // console.log(error);
-
-  // console.log(processMessage, "process");
-  
   useEffect(() => {
     const getProcess = async () => {
       try {
         const { data } = await axios.get(
           `${process.env.NEXT_PUBLIC_URL_SERVER}/process-messages`
         );
-        // console.log(typeof data, data, "Tipo y valor de data");
-        // console.log(typeof processMessageRef.current, processMessageRef.current, "Tipo y valor de processMessage");
-        // console.log(data !== processMessageRef.current, "data2");
-        
+
         if (data !== processMessageRef.current) {
           setProcessMessage(data);
           if (!data) {
@@ -46,22 +38,10 @@ useEffect(() => {
         console.log(error);
       }
     };
-    // getProcess();
     const intervalId = setInterval(getProcess, 20000);
 
     return () => clearInterval(intervalId);
   }, []);
-
-  // useEffect(() => {
-  //   fetch("/message.json")
-  //     .then((response) => response.json())
-  //     .then((data) => {
-  //       setMessage(data.message);
-  //     })
-  //     .catch((error) => {
-  //       console.error("Error al cargar el mensaje:", error);
-  //     });
-  // }, []);
 
   useEffect(() => {
     const storedMessage = localStorage.getItem("savedMessage");
@@ -88,15 +68,93 @@ useEffect(() => {
     }
   }, [messageSuccesful, error]);
 
+  useEffect(() => {
+    if (!values || values.length === 0) return; // Asegurarse de que haya archivos antes de procesar
+
+    const processFiles = async () => {
+      const allData = []; // Arreglo para almacenar todos los datos
+
+      for (const file of values) {
+        try {
+          const reader = new FileReader();
+          reader.readAsArrayBuffer(file);
+          reader.onload = (e) => {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: "array" });
+
+            const firstSheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[firstSheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+            if (jsonData.length > 0) {
+              const firstObject = jsonData[0];
+              const fecha = firstObject.__EMPTY_4;
+              const doctor = firstObject.__EMPTY_8;
+
+              // Agregar fecha y doctor a cada objeto en jsonData
+              const enrichedData = jsonData.map((item) => ({
+                ...item,
+                fecha: fecha, // Asigna la fecha
+                doctor: doctor, // Asigna el doctor
+              }));
+
+              allData.push(...enrichedData);
+            }
+          };
+
+          reader.onerror = (readerError) => {
+            console.error("Error leyendo el archivo:", readerError);
+          };
+        } catch (error) {
+          console.error("Error procesando archivo:", error);
+        }
+      }
+
+      // Esperar a que todos los archivos sean leídos
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Esperar un tiempo prudente
+
+      const timeGroups = {};
+      console.log(allData, "data");
+      // Filtrar duplicados (ejemplo usando un atributo 'id' como clave)
+      allData.forEach((item) => {
+        const id = item.__EMPTY_1; // El ID
+        const hour = item.__EMPTY; // La hora en formato decimal
+
+        // Si ya existe un grupo para este ID
+        if (timeGroups[id]) {
+          const existingHour = timeGroups[id].__EMPTY; // La hora existente para comparación
+
+          // Verificar si la diferencia está dentro del rango de 6 horas (0.25 en decimal)
+          if (Math.abs(hour - existingHour) <= 0.25) {
+            // Si está dentro del rango, comparar las horas
+            if (hour < existingHour) {
+              timeGroups[id] = item; // Guarda el item actual si su hora es menor
+            }
+          } else {
+            timeGroups[id + "r"] = item; // Guarda el item actual si su hora es menor
+          }
+        } else {
+          // Si no existe un grupo, agregar el item
+          timeGroups[id] = item;
+        }
+      });
+
+      // Convertir el objeto de vuelta a un arreglo
+      const uniqueData = Object.values(timeGroups)
+
+      setUniqueValues(uniqueData.sort(
+        (a, b) => a.__EMPTY - b.__EMPTY
+      )); // Aquí tendrás tus datos únicos
+    };
+
+    processFiles();
+  }, [values]);
+
+  console.log(values);
+  console.log(uniqueValues);
+
   const updateMessage = async () => {
     const newMessage = message;
-    // const response = await fetch("/api/update-message", {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   },
-    //   body: JSON.stringify(newMessage),
-    // });
 
     localStorage.setItem("savedMessage", newMessage);
 
@@ -107,12 +165,6 @@ useEffect(() => {
     } else {
       setError("Error al actualizar el mensaje");
     }
-
-    // if (response.ok) {
-    // setMessageSuccesful("Mensaje actualizado");
-    // } else {
-    // setError("Error al actualizar el mensaje");
-    // }
   };
 
   const handleSubmit = async (event) => {
@@ -121,40 +173,43 @@ useEffect(() => {
       if (processMessage) {
         return setError("El proceso de envio debe terminar");
       }
-      const file = event.target.file.files[0];
+      if (!uniqueValues.length) {
+        return setError("El proceso de registro de horarios debe terminar");
+      }
+      // const file = event.target.file.files[0];
 
-      const reader = new FileReader();
-      reader.readAsArrayBuffer(file);
-      reader.onload = async (e) => {
-        const data = new Uint8Array(e.target.result);
-        const workbook = XLSX.read(data, { type: "array" });
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        const jsonData = XLSX.utils.sheet_to_json(worksheet);
+      // const reader = new FileReader();
+      // reader.readAsArrayBuffer(file);
+      // reader.onload = async (e) => {
+      //   const data = new Uint8Array(e.target.result);
+      //   const workbook = XLSX.read(data, { type: "array" });
+      //   const firstSheetName = workbook.SheetNames[0];
+      //   const worksheet = workbook.Sheets[firstSheetName];
+      //   const jsonData = XLSX.utils.sheet_to_json(worksheet);
 
-        const formData = {
-          messageTemplate: message,
-          data: jsonData,
-        };
-
-        try {
-          const response = await axios.post(
-            `${process.env.NEXT_PUBLIC_URL_SERVER}/send-messages`,
-            formData
-          );
-          setProcessMessage(true);
-          setMessageSuccesful(response.data.message);
-        } catch (postError) {
-          console.error("Error posting data:", postError);
-          setProcessMessage(false);
-          setError("Error al enviar los datos");
-        }
+      const formData = {
+        messageTemplate: message,
+        data: uniqueValues,
       };
 
-      reader.onerror = (error) => {
-        console.error("Error reading file:", error);
-        setError("Error al leer el archivo");
-      };
+      try {
+        const response = await axios.post(
+          `${process.env.NEXT_PUBLIC_URL_SERVER}/send-messages`,
+          formData
+        );
+        setProcessMessage(true);
+        setMessageSuccesful(response.data.message);
+      } catch (postError) {
+        console.error("Error posting data:", postError);
+        setProcessMessage(false);
+        setError("Error al enviar los datos");
+      }
+      // };
+
+      // reader.onerror = (error) => {
+      //   console.error("Error reading file:", error);
+      //   setError("Error al leer el archivo");
+      // };
     } catch (error) {
       console.error("Error handling submit:", error);
       setError("Error al mandar mensajes");
@@ -164,10 +219,6 @@ useEffect(() => {
   const cancelSend = async () => {
     try {
       await axios.get(`${process.env.NEXT_PUBLIC_URL_SERVER}/cancel-messages`);
-      // await fetch(`${process.env.NEXT_PUBLIC_URL_SERVER}/cancel-messages`, {
-      //   method: "GET",
-      // });
-      // setProcessMessage(false);
       setMessageSuccesful("Mensajes cancelados");
     } catch (error) {
       setError("Ocurrio un error");
@@ -189,6 +240,8 @@ useEffect(() => {
     const newCursorPosition = cursorPosition + text.length;
     setTimeout(() => setCursorPosition(newCursorPosition), 0);
   };
+
+  console.log(uniqueValues);
 
   return (
     <div className=" bg-orange-500 flex flex-wrap items-center justify-around min-h-screen p-10 gap-y-10">
@@ -285,10 +338,20 @@ useEffect(() => {
           </svg>
           <div>Añadir archivo xlsx</div>
           <input
-            onChange={(ev) => setSelectFile(ev.target?.files[0]?.name)}
+            onChange={(ev) => {
+              const selectedFiles = ev.target?.files;
+              if (selectedFiles && selectedFiles.length > 0) {
+                const fileNames = Array.from(selectedFiles).map(
+                  (file) => file.name
+                );
+                setSelectFile(fileNames.join(", "));
+                setValues(Array.from(selectedFiles));
+              }
+            }}
             type="file"
             name="file"
-            accept=".xls"
+            accept=".xls, .xlsx"
+            multiple
             required
             className="hidden"
           />
